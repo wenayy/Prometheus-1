@@ -1,7 +1,9 @@
-import express from "express"
+import express, { type NextFunction } from "express"
 import { middleware } from "./middleware.js";
 import client from "prom-client"
+import { request } from "http";
 const app =express();
+import type { Request,Response, } from "express";
 
 // const client = new promClient;
  
@@ -50,12 +52,30 @@ app.post("/sum", async (req, res) => {
     res.status(200).json({ msg: `${data.name}, ${data.age}` });
 });
 
-const requestCount= new client.Counter({
+const requestCounter= new client.Counter({
     name:"http-requestcount",
     help:"this is the this endpoint",
     labelNames:["method","route","status_code"]
 
 })
+
+export const  Prometheusmiddleware=(req:Request,res:Response,next:NextFunction)=>{
+const startTime= Date.now();
+
+// resigtering the callback after the next goes to route it will come back because .on(finish) you will run after res.on('finish)
+res.on('finish',()=>{
+    const endTime=Date.now();
+    console.log(`request time too ${(endTime-startTime)/1000}s`);
+requestCounter.inc({
+method:req.method,
+route:req.route? req.route.path:req.path,
+status_code:res.statusCode
+})
+
+})
+
+next();
+}
 
 
 
