@@ -53,7 +53,7 @@ app.post("/sum", async (req, res) => {
 });
 
 const requestCounter= new client.Counter({
-    name:"http-requestcount",
+    name:"http_requestcount",  //make sure it  Does not contain spaces, hyphens, or start with a number.
     help:"this is the this endpoint",
     labelNames:["method","route","status_code"]
 
@@ -76,6 +76,14 @@ status_code:res.statusCode
 
 next();
 }
+
+
+
+app.get("/metrics", async (req, res) => {
+    const metrics = await client.register.metrics();
+    res.set('Content-Type', client.register.contentType);
+    res.end(metrics);
+})
 
 
 
